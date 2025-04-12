@@ -1,54 +1,44 @@
 pipeline {
-    agent any  // This runs on any available agent (master or slave)
-
-    environment {
-        STAGING_SERVER = 'deploy@192.168.1.100'
-        PROD_SERVER = 'deploy@192.168.1.200'
-    }
+    agent any  // Runs on any available node
 
     stages {
-        stage('Checkout') {
-            steps {
-                echo 'Cloning code from repository...'
-                git branch: 'main', url: 'https://github.com/your-username/your-repo.git'
-            }
-        }
-
         stage('Build') {
             steps {
-                echo 'Running build process...'
-                sh './build.sh'  // Replace with your actual build command
+                script {
+                    try {
+                        echo 'Building...'
+                        // Your build commands here
+                    } catch (Exception e) {
+                        echo "Build failed: ${e.message}"
+                        currentBuild.result = 'FAILURE'
+                    }
+                }
             }
         }
-
         stage('Test') {
             steps {
-                echo 'Running tests...'
-                sh './test.sh'  // Replace with your actual test command
+                script {
+                    try {
+                        echo 'Testing...'
+                        // Your test commands here
+                    } catch (Exception e) {
+                        echo "Test failed: ${e.message}"
+                        currentBuild.result = 'FAILURE'
+                    }
+                }
             }
         }
-
-        stage('Deploy to Staging') {
-            when {
-                branch 'main'
-            }
+        stage('Deploy') {
             steps {
-                echo 'Deploying to staging environment...'
-                sh './deploy_staging.sh'  // Replace with your actual deploy command
-            }
-        }
-
-        stage('Approval') {
-            input {
-                message "Do you want to deploy to Production?"
-                ok "Deploy Now"
-            }
-        }
-
-        stage('Deploy to Production') {
-            steps {
-                echo 'Deploying to production environment...'
-                sh './deploy_production.sh'  // Replace with your actual deploy command
+                script {
+                    try {
+                        echo 'Deploying...'
+                        // Your deployment commands here
+                    } catch (Exception e) {
+                        echo "Deployment failed: ${e.message}"
+                        currentBuild.result = 'FAILURE'
+                    }
+                }
             }
         }
     }
@@ -58,7 +48,10 @@ pipeline {
             echo 'Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed!'
+            echo 'Pipeline failed. Please check the logs.'
+        }
+        always {
+            echo 'This will run regardless of success or failure.'
         }
     }
 }
